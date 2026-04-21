@@ -45,9 +45,9 @@ Trained three regression models:
 
 | Model | Test R² | Test MSE |
 |-------|---------|----------|
-| Linear Regression | TBD | TBD |
-| Random Forest | TBD | TBD |
-| XGBoost | TBD | TBD |
+| Linear Regression | 0.6630 | 130.5902 |
+| Random Forest | -0.5621 | 605.2981 |
+| XGBoost | -1.3464 | 909.2251 |
 
 ### Key Findings
 
