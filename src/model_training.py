@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+"""
+Model Development Script
+Trains regression models to predict temperature anomaly
+"""
+
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -26,17 +32,35 @@ def load_processed_data():
 
 
 def prepare_features_target(df):
-    """Prepare features and target for modeling"""
+    """Prepare features and target"""
     df = df.dropna(subset=['anomaly'])
 
     feature_cols = [col for col in df.columns if col != 'anomaly']
     X = df[feature_cols]
     y = df['anomaly']
 
-    # Fill missing values with column mean
-    X = X.fillna(X.mean())
-
     return X, y
+
+
+def clean_and_impute(X_train, X_test):
+    """
+    Handle missing values safely:
+    - Drop fully empty columns
+    - Fill remaining NaNs using TRAIN mean only
+    """
+
+    # Drop columns that are completely NaN
+    X_train = X_train.dropna(axis=1, how='all')
+
+    # Keep same columns in test
+    X_test = X_test[X_train.columns]
+
+    # Fill NaNs using TRAIN mean (prevents leakage)
+    train_means = X_train.mean()
+    X_train = X_train.fillna(train_means)
+    X_test = X_test.fillna(train_means)
+
+    return X_train, X_test
 
 
 def scale_features(X_train, X_test):
@@ -48,7 +72,7 @@ def scale_features(X_train, X_test):
 
 
 def train_models(X_train, X_test, y_train, y_test):
-    """Train multiple regression models"""
+    """Train regression models"""
 
     models = {
         'Linear Regression': LinearRegression(),
@@ -125,7 +149,7 @@ def main():
     df = load_processed_data()
     print(f"Loaded data with {len(df)} samples")
 
-    # Prepare data
+    # Prepare features/target
     X, y = prepare_features_target(df)
     print(f"Features: {list(X.columns)}")
     print("Target: anomaly")
@@ -135,7 +159,14 @@ def main():
         X, y, test_size=0.3, shuffle=False
     )
 
-    # Scale features (important for linear regression)
+    # 🚨 FIXED: Clean + impute AFTER split
+    X_train, X_test = clean_and_impute(X_train, X_test)
+
+    # Debug check (optional)
+    print("NaNs in X_train:", X_train.isna().sum().sum())
+    print("NaNs in X_test:", X_test.isna().sum().sum())
+
+    # Scale features
     X_train_scaled, X_test_scaled = scale_features(X_train, X_test)
 
     # Train models
@@ -144,10 +175,10 @@ def main():
     # Feature importance plots
     for name, result in results.items():
         if name in ['Random Forest', 'XGBoost']:
-            plot_feature_importance(result['model'], list(X.columns), name)
+            plot_feature_importance(result['model'], list(X_train.columns), name)
 
     # Linear regression coefficients
-    plot_coefficients(results['Linear Regression']['model'], list(X.columns))
+    plot_coefficients(results['Linear Regression']['model'], list(X_train.columns))
 
     # Save results
     results_df = pd.DataFrame({
