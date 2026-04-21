@@ -20,7 +20,7 @@ def load_noaa_gas_data(filename, gas_name):
         return pd.DataFrame()
 
     # Read the file, skip header lines starting with #
-    df = pd.read_csv(filepath, sep='\s+', comment='#', header=None,
+    df = pd.read_csv(filepath, sep=r'\s+', comment='#', header=None,
                      names=['year', 'month', 'decimal_date', 'average', 'trend', 'days', 'unc1', 'unc2'])
 
     df['date'] = pd.to_datetime(df[['year', 'month']].assign(day=1))
@@ -78,39 +78,44 @@ def load_solar_irradiance():
 
     ds = xr.open_dataset(filepath)
 
-    print(ds)  # 👈 VERY useful to inspect structure
-
-    # Convert to pandas
+    # Convert to dataframe
     df = ds.to_dataframe().reset_index()
 
-    print(df.head())
+    # Keep only relevant columns
+    df = df[['time', 'TSI']]
 
-    # You’ll need to adjust this depending on variable names
-    # Common ones are: 'time', 'TSI', etc.
+    # Remove duplicates (caused by bounds)
+    df = df.drop_duplicates(subset='time')
 
-    if 'time' in df.columns:
-        df['date'] = pd.to_datetime(df['time'])
-
-    # Replace 'TSI' with actual column name after inspection
-    value_col = [col for col in df.columns if col not in ['time', 'date']][0]
-
-    df = df[['date', value_col]].rename(columns={value_col: 'irradiance'})
-    df = df.set_index('date')
+    df = df.rename(columns={'time': 'date', 'TSI': 'irradiance'})
+    df = df.set_index('date').sort_index()
 
     return df
 
 def load_owid_data(filename, value_col):
-    """Load Our World in Data CSV"""
     filepath = data_dir / filename
     if not filepath.exists():
         print(f"File {filename} not found")
         return pd.DataFrame()
 
     df = pd.read_csv(filepath)
-    # Assume country is 'World', Year is year
+
+    # Normalize column names (CRUCIAL)
+    df.columns = df.columns.str.lower()
+
+    print("OWID columns:", df.columns)  # debug
+
+    # Filter world data
     df_world = df[df['country'] == 'World'].copy()
-    df_world['date'] = pd.to_datetime(df_world['Year'], format='%Y')
+
+    # Use lowercase 'year'
+    df_world['date'] = pd.to_datetime(df_world['year'], format='%Y')
+
+    # Ensure value column matches
+    value_col = value_col.lower()
+
     df_world = df_world[['date', value_col]].set_index('date')
+
     return df_world
 
 def main():

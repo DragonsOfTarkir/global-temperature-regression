@@ -6,3 +6,5 @@ seaborn
 requests
 statsmodels
 xgboost
+xarray
+netcdf4
