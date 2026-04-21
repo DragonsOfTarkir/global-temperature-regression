@@ -29,39 +29,74 @@ def load_noaa_gas_data(filename, gas_name):
     return df
 
 def load_nasa_temperature():
-    """Load NASA GISS temperature anomaly data"""
     filepath = data_dir / 'temperature_anomaly.txt'
     if not filepath.exists():
         print("Temperature file not found")
         return pd.DataFrame()
 
-    # Skip header lines
-    df = pd.read_csv(filepath, sep='\s+', skiprows=1, header=None)
-    # The file has year and 12 months
-    columns = ['year'] + [f'month_{i}' for i in range(1,13)]
-    df.columns = columns
+    records = []
 
-    # Melt to long format
-    df_melted = df.melt(id_vars=['year'], var_name='month', value_name='anomaly')
-    df_melted['month'] = df_melted['month'].str.replace('month_', '').astype(int)
-    df_melted['date'] = pd.to_datetime(df_melted[['year', 'month']].assign(day=1))
-    df_melted = df_melted[['date', 'anomaly']].set_index('date')
+    with open(filepath, 'r') as f:
+        for line in f:
+            parts = line.strip().split()
 
-    # Convert anomaly from string to float, handle *** as NaN
-    df_melted['anomaly'] = pd.to_numeric(df_melted['anomaly'], errors='coerce')
-    return df_melted
+            # Skip non-data lines
+            if len(parts) < 13:
+                continue
+
+            # First value must be a year
+            if not parts[0].isdigit():
+                continue
+
+            year = int(parts[0])
+
+            # Extract first 12 values after year (Jan–Dec)
+            months = parts[1:13]
+
+            for i, val in enumerate(months, start=1):
+                try:
+                    anomaly = float(val)
+                except:
+                    anomaly = np.nan
+
+                date = pd.Timestamp(year=year, month=i, day=1)
+                records.append((date, anomaly))
+
+    df = pd.DataFrame(records, columns=['date', 'anomaly'])
+    df = df.set_index('date').sort_index()
+
+    return df
 
 def load_solar_irradiance():
-    """Load solar irradiance data"""
-    filepath = data_dir / 'solar_irradiance.txt'
+    import xarray as xr
+
+    filepath = data_dir / 'tsi_v03r00_monthly.nc'
+
     if not filepath.exists():
         print("Solar irradiance file not found")
         return pd.DataFrame()
 
-    df = pd.read_csv(filepath, sep='\s+', comment=';', header=None, names=['year', 'month', 'day', 'irradiance'])
-    # Assume columns: year, month, day, irradiance
-    df['date'] = pd.to_datetime(df[['year', 'month', 'day']])
-    df = df[['date', 'irradiance']].set_index('date')
+    ds = xr.open_dataset(filepath)
+
+    print(ds)  # 👈 VERY useful to inspect structure
+
+    # Convert to pandas
+    df = ds.to_dataframe().reset_index()
+
+    print(df.head())
+
+    # You’ll need to adjust this depending on variable names
+    # Common ones are: 'time', 'TSI', etc.
+
+    if 'time' in df.columns:
+        df['date'] = pd.to_datetime(df['time'])
+
+    # Replace 'TSI' with actual column name after inspection
+    value_col = [col for col in df.columns if col not in ['time', 'date']][0]
+
+    df = df[['date', value_col]].rename(columns={value_col: 'irradiance'})
+    df = df.set_index('date')
+
     return df
 
 def load_owid_data(filename, value_col):

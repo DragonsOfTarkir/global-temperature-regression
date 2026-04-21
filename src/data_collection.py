@@ -22,9 +22,6 @@ data_urls = {
     # NASA GISS Temperature
     'temperature_anomaly': 'https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.txt',
 
-    # Solar Irradiance (NOAA)
-    'solar_irradiance': 'https://www.ncei.noaa.gov/data/total-solar-irradiance/access/',
-
     # Our World in Data
     'co2_emissions': 'https://raw.githubusercontent.com/owid/co2-data/master/owid-co2-data.csv',
     'energy_consumption': 'https://raw.githubusercontent.com/owid/energy-data/master/owid-energy-data.csv',
