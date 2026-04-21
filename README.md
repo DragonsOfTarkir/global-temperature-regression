@@ -44,3 +44,6 @@ Open `notebooks/climate_analysis_report.ipynb` in Jupyter and run the cells.
 
 ## Report
 See `reports/final_report.md` for the complete analysis and findings.
+
+## AI Usage
+I used AI to help create the structure of the github and used it to help me create a base for the code. Afterwards I added onto the code and went through each step and fixed any errors.
