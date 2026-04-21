@@ -20,8 +20,8 @@ def load_noaa_gas_data(filename, gas_name):
         return pd.DataFrame()
 
     # Read the file, skip header lines starting with #
-    df = pd.read_csv(filepath, delim_whitespace=True, comment='#', header=None,
-                     names=['year', 'month', 'decimal_date', 'average', 'trend', 'days'])
+    df = pd.read_csv(filepath, sep='\s+', comment='#', header=None,
+                     names=['year', 'month', 'decimal_date', 'average', 'trend', 'days', 'unc1', 'unc2'])
 
     df['date'] = pd.to_datetime(df[['year', 'month']].assign(day=1))
     df = df[['date', 'average']].rename(columns={'average': gas_name})
@@ -36,7 +36,7 @@ def load_nasa_temperature():
         return pd.DataFrame()
 
     # Skip header lines
-    df = pd.read_csv(filepath, delim_whitespace=True, skiprows=1, header=None)
+    df = pd.read_csv(filepath, sep='\s+', skiprows=1, header=None)
     # The file has year and 12 months
     columns = ['year'] + [f'month_{i}' for i in range(1,13)]
     df.columns = columns
@@ -58,7 +58,7 @@ def load_solar_irradiance():
         print("Solar irradiance file not found")
         return pd.DataFrame()
 
-    df = pd.read_csv(filepath, delim_whitespace=True, comment=';')
+    df = pd.read_csv(filepath, sep='\s+', comment=';', header=None, names=['year', 'month', 'day', 'irradiance'])
     # Assume columns: year, month, day, irradiance
     df['date'] = pd.to_datetime(df[['year', 'month', 'day']])
     df = df[['date', 'irradiance']].set_index('date')
@@ -72,8 +72,8 @@ def load_owid_data(filename, value_col):
         return pd.DataFrame()
 
     df = pd.read_csv(filepath)
-    # Assume Entity is 'World', Year is year
-    df_world = df[df['Entity'] == 'World'].copy()
+    # Assume country is 'World', Year is year
+    df_world = df[df['country'] == 'World'].copy()
     df_world['date'] = pd.to_datetime(df_world['Year'], format='%Y')
     df_world = df_world[['date', value_col]].set_index('date')
     return df_world
@@ -88,9 +88,9 @@ def main():
 
     # OWID data - need to check actual column names
     # For now, assume some columns
-    co2_emissions_df = load_owid_data('co2_emissions.csv', 'Annual CO₂ emissions')
-    energy_df = load_owid_data('energy_consumption.csv', 'Primary energy consumption (TWh)')
-    land_use_df = load_owid_data('land_use_emissions.csv', 'Land-use change emissions')
+    co2_emissions_df = load_owid_data('co2_emissions.csv', 'co2')
+    energy_df = load_owid_data('energy_consumption.csv', 'primary_energy_consumption')
+    land_use_df = load_owid_data('land_use_emissions.csv', 'land_use_change_co2')
 
     # Merge all dataframes
     dfs = [co2_df, ch4_df, n2o_df, temp_df, solar_df, co2_emissions_df, energy_df, land_use_df]
@@ -98,7 +98,7 @@ def main():
 
     # Forward fill missing values for greenhouse gases (they change slowly)
     gas_cols = ['co2_ppm', 'ch4_ppb', 'n2o_ppb']
-    merged_df[gas_cols] = merged_df[gas_cols].fillna(method='ffill')
+    merged_df[gas_cols] = merged_df[gas_cols].ffill()
 
     # Interpolate temperature anomalies
     merged_df['anomaly'] = merged_df['anomaly'].interpolate()

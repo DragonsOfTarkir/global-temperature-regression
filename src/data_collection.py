@@ -23,12 +23,12 @@ data_urls = {
     'temperature_anomaly': 'https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.txt',
 
     # Solar Irradiance (NOAA)
-    'solar_irradiance': 'https://www.ncei.noaa.gov/data/total-solar-irradiance/access/SOLAR_IRRADIANCE_V02R.txt',
+    'solar_irradiance': 'https://www.ncei.noaa.gov/data/total-solar-irradiance/access/',
 
     # Our World in Data
-    'co2_emissions': 'https://ourworldindata.org/grapher/co-emissions-by-sector.csv',
-    'energy_consumption': 'https://ourworldindata.org/grapher/energy-consumption-by-source-and-region.csv',
-    'land_use_emissions': 'https://ourworldindata.org/grapher/land-use-change-emissions.csv'
+    'co2_emissions': 'https://raw.githubusercontent.com/owid/co2-data/master/owid-co2-data.csv',
+    'energy_consumption': 'https://raw.githubusercontent.com/owid/energy-data/master/owid-energy-data.csv',
+    'land_use_emissions': 'https://raw.githubusercontent.com/owid/co2-data/master/owid-co2-data.csv'  # Same file has land use
 }
 
 def download_file(url, filename):
