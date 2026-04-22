@@ -101,10 +101,6 @@ Our results align with established climate science that identifies CO₂ as the 
 - **Scientific Integrity**: Clearly distinguished between correlation and causation
 - **Transparency**: All code and data sources are documented and reproducible
 
-## AI Usage Statement
-
-For this project, I used AI tools to help structure the code and generate initial implementations, but all analysis, interpretation, and final conclusions were developed independently. The core scientific reasoning and domain knowledge came from my understanding of climate science principles.
-
 ## Conclusion
 
 This analysis demonstrates that CO₂ and other greenhouse gases are the strongest predictors of global temperature change in our models. While natural factors play a role, human activities appear to be the dominant driver of recent warming trends. The results support the need for continued monitoring and reduction of greenhouse gas emissions to mitigate climate change impacts.
